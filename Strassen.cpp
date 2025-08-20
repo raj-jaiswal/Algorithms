@@ -94,7 +94,7 @@ Matrix split(Matrix mat, int x1, int x2, int y1, int y2){
 
 Matrix merge(Matrix mat1, Matrix mat2, Matrix mat3, Matrix mat4){
     int n = mat1.n;
-    Matrix A(n * 4);
+    Matrix A(n * 2);
     for(int i=0; i<n*2; i++){
         for(int j=0; j<n*2; j++){
             if(i<n && j<n){
@@ -115,6 +115,7 @@ Matrix merge(Matrix mat1, Matrix mat2, Matrix mat3, Matrix mat4){
 }
 
 Matrix strassen(Matrix A, Matrix B){
+    cout << A.n << endl;
     if(A.n <= 2){
         return A * B;
     }
@@ -162,6 +163,4 @@ int main(){
 
     cout << "Product: ";
     strassen(A,B).print();
-    // vector<vector<int>> prod = multiply(A, B);
-    // print(prod);
 }
