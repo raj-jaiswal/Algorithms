@@ -25,14 +25,12 @@ private:
             s.pop();
 
             for(int i=0; i<nNodes; i++){
-                if(Mat[node][i] == 1 && visited[i] == 0){
+                if(Mat[node][i] != 0 && visited[i] == 0){
                     visited[i] = 1;
                     s.push(i);
                 }
             }
         }
-
-        cout << endl;
     }
 
     void BFS(int node, vector<bool>& visited){
@@ -46,14 +44,12 @@ private:
             s.pop();
 
             for(int i=0; i<nNodes; i++){
-                if(Mat[node][i] == 1 && visited[i] == 0){
+                if(Mat[node][i] != 0 && visited[i] == 0){
                     visited[i] = 1;
                     s.push(i);
                 }
             }
         }
-
-        cout << endl;
     }
 
 public:
@@ -78,8 +74,8 @@ public:
     }
 
     void setEdge(int a, int b, int w){
-        Mat[a][b] = 1;
-        Mat[b][a] = 1;
+        Mat[a][b] = w;
+        Mat[b][a] = w;
     }
 
     void DFS(int node){
@@ -89,6 +85,7 @@ public:
                 DFS(i, visited);
             }
         }
+        cout << endl;
     }
 
     void BFS(int node){
@@ -98,6 +95,7 @@ public:
                 BFS(i, visited);
             }
         }
+        cout << endl;
     }
 
     Graph prins(int v){
@@ -116,14 +114,16 @@ public:
         while(!pq.empty() && visited_count != nNodes){
             Edge e=pq.top();
             pq.pop();
-            MST.setEdge(e.a, e.b, e.w);
-            visited[e.b] = true;
-            sum += e.w;
-            visited_count++;
+            if(!visited[e.b]){
+                MST.setEdge(e.a, e.b, e.w);
+                visited[e.b] = true;
+                sum += e.w;
+                visited_count++;
 
-            for(int i=0; i<nNodes; i++){
-                if(Mat[e.b][i] && !visited[i])
-                    pq.push({Mat[e.b][i], e.b, i});
+                for(int i=0; i<nNodes; i++){
+                    if(Mat[e.b][i] && !visited[i])
+                        pq.push({Mat[e.b][i], e.b, i});
+                }
             }
         }
 
