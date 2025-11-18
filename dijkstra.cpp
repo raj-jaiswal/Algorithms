@@ -1,11 +1,25 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-struct Edge {
-    int w, a, b;
-    bool operator>(const Edge& other) const {
-        return w > other.w;
+class Edge{
+public:
+    int a;
+    int b;
+    int weight;
+
+    Edge(int a_, int b_, int w){
+        a = a_;
+        b = b_;
+        weight = w;
     }
+
+    bool operator<(const Edge& a_) const{
+        return weight < a_.weight;
+    } 
+
+    bool operator>(const Edge& a_) const{
+        return weight > a_.weight;
+    } 
 };
 
 class Graph{
@@ -14,44 +28,40 @@ private:
     int nNodes;
     int nEdges;
 
-    void DFS(int node, vector<bool>& visited){
-        stack<int> s;
-        s.push(node);
-        visited[node] = 1;
-
-        while(!s.empty()){
-            node = s.top();
-            cout << node << " ";
-            s.pop();
+    void dfs(int node, vector<bool>& visited){
+        stack<int> next;
+        next.push(node);
+        while (!next.empty()){
+            int elm = next.top();
+            cout << elm << " ";
+            visited[elm] = true;
+            next.pop();
 
             for(int i=0; i<nNodes; i++){
-                if(Mat[node][i] != 0 && visited[i] == 0){
-                    visited[i] = 1;
-                    s.push(i);
+                if(Mat[elm][i] != INT_MAX && !visited[i]){
+                    next.push(i);
+                    visited[i] = true;
                 }
             }
         }
-        cout << endl;
     }
 
-    void BFS(int node, vector<bool>& visited){
-        queue<int> s;
-        s.push(node);
-        visited[node] = 1;
-
-        while(!s.empty()){
-            node = s.front();
-            cout << node << " ";
-            s.pop();
+    void bfs(int node, vector<bool>& visited){
+        queue<int> next;
+        next.push(node);
+        while (!next.empty()){
+            int elm = next.front();
+            cout << elm << " ";
+            visited[elm] = true;
+            next.pop();
 
             for(int i=0; i<nNodes; i++){
-                if(Mat[node][i] != 0 && visited[i] == 0){
-                    visited[i] = 1;
-                    s.push(i);
+                if(Mat[elm][i] != INT_MAX && !visited[i]){
+                    next.push(i);
+                    visited[i] = true;
                 }
             }
         }
-        cout << endl;
     }
 
 public:
@@ -60,68 +70,107 @@ public:
         nEdges = ne;
 
         for(int i=0; i<nNodes; i++){
-            vector<int> temp (nNodes, 0);
-            Mat.push_back(temp);
+            vector<int> arr;
+            Mat.push_back(arr);
+            for(int j=0; j<nNodes; j++){
+                Mat[i].push_back(INT_MAX);
+            }
+        }
+
+        for(int i=0; i<nNodes; i++){
+            Mat[i][i] = 0;
         }
     }
 
     void input(){
         cout << "Enter Nodes for graph end points: " << endl;
         for(int i=0; i<nEdges; i++){
-            int A, B, V;
-            cin >> A >> B >> V;
-            Mat[A][B] = V;
+            int A, B, W;
+            cin >> A >> B >> W;
+            if (W<0){
+                cerr << "Negative Edges are not Allowed." << endl;
+                exit(1);
+            }
+            Mat[A][B] = W;
         }
     }
 
-    void setEdge(int a, int b, int w){
-        Mat[a][b] = w;
-    }
-
-    void DFS(int node){
-        vector<bool> visited (nNodes, 0);
+    void dfs(){
+        vector<bool> visited (nNodes, false);
+        cout << "dfs: ";
         for(int i=0; i<nNodes; i++){
             if(!visited[i]){
-                DFS(i, visited);
+                dfs(i, visited);
             }
         }
+        cout << endl;
     }
 
-    void BFS(int node){
-        vector<bool> visited (nNodes, 0);
+    void bfs(){
+        vector<bool> visited (nNodes, false);
+        cout << "bfs: ";
         for(int i=0; i<nNodes; i++){
             if(!visited[i]){
-                BFS(i, visited);
+                bfs(i, visited);
             }
+        }
+        cout << endl;
+    }
+
+    void addEdge(int start, int end, int weight){
+        Mat[start][end] = weight;
+        Mat[end][start] = weight;
+    }
+
+    int totalCost(){
+        int sum = 0;
+        for(int i=0; i<nNodes; i++){
+            for(int j=0; j<i; j++){
+                sum += (Mat[i][j]==INT_MAX) ? 0 : Mat[i][j];
+            }
+        }
+
+        return sum;
+    }
+
+    void printMat(){
+        for(int i=0; i<nNodes; i++){
+            for(int j=0; j<nNodes; j++){
+                if (Mat[i][j] == INT_MAX)
+                    cout << "-" << '\t';
+                else
+                    cout << Mat[i][j] << "\t";
+            }
+            cout << endl;
         }
     }
 
-    vector<int> dijkstra(int src) {
-        vector<int> dist(nNodes, INT_MAX);
-        dist[src] = 0;
-        priority_queue<pair<int,int>, vector<pair<int,int>>, greater<pair<int,int>>> pq;
-        pq.push({0, src});
+    void dijkstras(int start, vector<int>& costs, vector<int>& parents){
+        vector<bool> visited (nNodes, false);
+        costs[start]=0;
 
+        priority_queue<Edge, vector<Edge>, greater<Edge>> pq;
+        Edge next (start, start, 0);
+        pq.push(next);
+        
         while(!pq.empty()){
-            int d = pq.top().first;
-            int u = pq.top().second;
+            Edge step = pq.top();
             pq.pop();
+            if(visited[step.b]) continue;
+            parents[step.b] = step.a;
+            start = step.b;
 
-            if(d > dist[u]) continue;
-
-            for(int v = 0; v < nNodes; v++){
-                if(Mat[u][v] && dist[v] > dist[u] + Mat[u][v]){
-                    dist[v] = dist[u] + Mat[u][v];
-                    pq.push({dist[v], v});
+            visited[start] = true;
+            for(int i=0; i<nNodes; i++){
+                if(Mat[start][i] != INT_MAX && !visited[i]){
+                    if(step.weight + Mat[start][i] < costs[i]){
+                        costs[i] = step.weight + Mat[start][i];
+                        Edge next (start, i, costs[i]);
+                        pq.push(next);
+                    }
                 }
             }
         }
-
-        cout << "Shortest distances from " << src << ":\n";
-        for(int i=0; i<nNodes; i++)
-            cout << i << " -> " << dist[i] << endl;
-
-        return dist;
     }
 };
 
@@ -131,9 +180,23 @@ int main(){
 
     Graph G(n, k);
     G.input();
-    G.BFS(0);
-    G.DFS(0);
+    G.dfs();
+    G.bfs();
 
-    vector<int> shortest_distances = G.dijkstra(0);
+    vector<int> costs (n, INT_MAX);
+    vector<int> parents (n, -1);
+
+    G.dijkstras(0, costs, parents);
+    
+    for(int i=0; i<n; i++){
+        cout << costs[i] << " ";
+    }
+    cout << endl;
+
+    for(int i=0; i<n; i++){
+        cout << parents[i] << " ";
+    }
+    cout << endl;
+
     return 0;
 }

@@ -1,9 +1,31 @@
 #include <bits/stdc++.h>
 using namespace std;
 
+class Edge{
+public:
+    int a;
+    int b;
+    int weight;
+
+    Edge(int a_, int b_, int w){
+        a = a_;
+        b = b_;
+        weight = w;
+    }
+
+    bool operator<(const Edge& a_) const{
+        return weight < a_.weight;
+    } 
+
+    bool operator>(const Edge& a_) const{
+        return weight > a_.weight;
+    } 
+};
+
 class Graph{
 private:
     vector<vector<int>> Mat;
+    vector<Edge> edges;
     int nNodes;
     int nEdges;
 
@@ -67,6 +89,8 @@ public:
             int A, B, W;
             cin >> A >> B >> W;
             
+            Edge E (A,B,W);
+            edges.push_back(E);
             Mat[A][B] = W;
         }
     }
@@ -121,48 +145,24 @@ public:
         }
     }
 
-    void floydWarshall(vector<vector<int>>& costs, vector<vector<int>>& next){
+    void bellman(int start, vector<int>& costs, vector<int>& parents){
+        costs[start] = 0;
         for(int i=0; i<nNodes; i++){
-            for(int j=0; j<nNodes; j++){
-                costs[i][j] = Mat[i][j];
-                next[i][j] = (costs[i][j] != INT_MAX) ? j : -1;
-            }
-        }
-
-        for(int k=0; k<nNodes; k++){
-            for(int i=0; i<nNodes; i++){
-                for(int j=0; j<nNodes; j++){
-                    if(costs[i][k] != INT_MAX && costs[k][j] != INT_MAX && costs[i][k] + costs[k][j] < costs[i][j]){
-                        costs[i][j] = costs[i][k] + costs[k][j];
-                        next[i][j] = next[i][k];
-                    }
+            for(int j=0; j<edges.size(); j++){
+                if(costs[edges[j].a] + edges[j].weight < costs[edges[j].b]){
+                    costs[edges[j].b] = costs[edges[j].a] + edges[j].weight;
+                    parents[edges[j].b] = edges[j].a;
                 }
             }
         }
-
-        for(int i=0; i<nNodes; i++){
-            if(costs[i][i] < 0){
-                cerr << "Negative Cycles." << endl;
+        for(int j=0; j<edges.size(); j++){
+            if(costs[edges[j].a] + edges[j].weight < costs[edges[j].b]){
+                cerr << "Negative Cycle Present." << endl;
                 exit(1);
             }
         }
     }
 };
-
-vector<int> getPath(int u, int v, const vector<vector<int>>& next) {
-    if (next[u][v] == -1) return {};
-
-    vector<int> path;
-    path.push_back(u);
-    while (u != v) {
-        cout << u << " ";
-        u = next[u][v];
-        path.push_back(u);
-    }
-    cout << u << " ";
-    cout << endl;
-    return path;
-}
 
 int main(){
     int n, k;
@@ -173,26 +173,20 @@ int main(){
     G.dfs();
     G.bfs();
 
-    vector<vector<int>> costs(n, vector<int>(n));
-    vector<vector<int>> next(n, vector<int>(n));
-    G.floydWarshall(costs, next);
+    vector<int> costs (n, INT_MAX);
+    vector<int> parents (n, -1);
 
-    cout << "Costs: " << endl;
-    for(int i=0; i<n; i++){
-        for(int j=0; j<n; j++){
-            cout << costs[i][j] << " ";
-        }
-        cout << endl;
-    }
+    G.bellman(0, costs, parents);
 
-    cout << "Next: " << endl;
     for(int i=0; i<n; i++){
-        for(int j=0; j<n; j++){
-            cout << next[i][j] << " ";
-        }
-        cout << endl;
+        cout << costs[i] << " ";
     }
+    cout << endl;
+
+    for(int i=0; i<n; i++){
+        cout << parents[i] << " ";
+    }
+    cout << endl;
     
-    getPath(0,3,next);
     return 0;
 }

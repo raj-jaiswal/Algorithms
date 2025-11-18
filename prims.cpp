@@ -1,11 +1,25 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-struct Edge {
-    int w, a, b;
-    bool operator>(const Edge& other) const {
-        return w > other.w;
+class Edge{
+public:
+    int a;
+    int b;
+    int weight;
+
+    Edge(int a_, int b_, int w){
+        a = a_;
+        b = b_;
+        weight = w;
     }
+
+    bool operator<(const Edge& a_) const{
+        return weight < a_.weight;
+    } 
+
+    bool operator>(const Edge& a_) const{
+        return weight > a_.weight;
+    } 
 };
 
 class Graph{
@@ -14,39 +28,37 @@ private:
     int nNodes;
     int nEdges;
 
-    void DFS(int node, vector<bool>& visited){
-        stack<int> s;
-        s.push(node);
-        visited[node] = 1;
-
-        while(!s.empty()){
-            node = s.top();
-            cout << node << " ";
-            s.pop();
+    void dfs(int node, vector<bool>& visited){
+        stack<int> next;
+        next.push(node);
+        while (!next.empty()){
+            int elm = next.top();
+            cout << elm << " ";
+            visited[elm] = true;
+            next.pop();
 
             for(int i=0; i<nNodes; i++){
-                if(Mat[node][i] != 0 && visited[i] == 0){
-                    visited[i] = 1;
-                    s.push(i);
+                if(Mat[elm][i] != INT_MAX && !visited[i]){
+                    next.push(i);
+                    visited[i] = true;
                 }
             }
         }
     }
 
-    void BFS(int node, vector<bool>& visited){
-        queue<int> s;
-        s.push(node);
-        visited[node] = 1;
-
-        while(!s.empty()){
-            node = s.front();
-            cout << node << " ";
-            s.pop();
+    void bfs(int node, vector<bool>& visited){
+        queue<int> next;
+        next.push(node);
+        while (!next.empty()){
+            int elm = next.front();
+            cout << elm << " ";
+            visited[elm] = true;
+            next.pop();
 
             for(int i=0; i<nNodes; i++){
-                if(Mat[node][i] != 0 && visited[i] == 0){
-                    visited[i] = 1;
-                    s.push(i);
+                if(Mat[elm][i] != INT_MAX && !visited[i]){
+                    next.push(i);
+                    visited[i] = true;
                 }
             }
         }
@@ -58,76 +70,107 @@ public:
         nEdges = ne;
 
         for(int i=0; i<nNodes; i++){
-            vector<int> temp (nNodes, 0);
-            Mat.push_back(temp);
+            vector<int> arr;
+            Mat.push_back(arr);
+            for(int j=0; j<nNodes; j++){
+                Mat[i].push_back(INT_MAX);
+            }
+        }
+
+        for(int i=0; i<nNodes; i++){
+            Mat[i][i] = 0;
         }
     }
 
     void input(){
         cout << "Enter Nodes for graph end points: " << endl;
         for(int i=0; i<nEdges; i++){
-            int A, B, V;
-            cin >> A >> B >> V;
-            Mat[A][B] = V;
-            Mat[B][A] = V;
+            int A, B, W;
+            cin >> A >> B >> W;
+            Mat[A][B] = W;
+            Mat[B][A] = W;
         }
     }
 
-    void setEdge(int a, int b, int w){
-        Mat[a][b] = w;
-        Mat[b][a] = w;
-    }
-
-    void DFS(int node){
-        vector<bool> visited (nNodes, 0);
-        for(int i=0; i<nNodes; i++){
-            if(!visited[i]){
-                DFS(i, visited);
-            }
-        }
-        cout << endl;
-    }
-
-    void BFS(int node){
-        vector<bool> visited (nNodes, 0);
-        for(int i=0; i<nNodes; i++){
-            if(!visited[i]){
-                BFS(i, visited);
-            }
-        }
-        cout << endl;
-    }
-
-    Graph prins(int v){
+    void dfs(){
         vector<bool> visited (nNodes, false);
-        visited[v] = true;
-        int visited_count = 1;
-        int sum=0;
-
-        Graph MST(nNodes, nNodes-1);
-        priority_queue<Edge, vector<Edge>, greater<Edge>> pq;
+        cout << "dfs: ";
         for(int i=0; i<nNodes; i++){
-            if(Mat[v][i])
-                pq.push({Mat[v][i], v, i});
+            if(!visited[i]){
+                dfs(i, visited);
+            }
+        }
+        cout << endl;
+    }
+
+    void bfs(){
+        vector<bool> visited (nNodes, false);
+        cout << "bfs: ";
+        for(int i=0; i<nNodes; i++){
+            if(!visited[i]){
+                bfs(i, visited);
+            }
+        }
+        cout << endl;
+    }
+
+    void addEdge(int start, int end, int weight){
+        Mat[start][end] = weight;
+        Mat[end][start] = weight;
+    }
+
+    int totalCost(){
+        int sum = 0;
+        for(int i=0; i<nNodes; i++){
+            for(int j=0; j<i; j++){
+                sum += (Mat[i][j]==INT_MAX) ? 0 : Mat[i][j];
+            }
         }
 
-        while(!pq.empty() && visited_count != nNodes){
-            Edge e=pq.top();
-            pq.pop();
-            if(!visited[e.b]){
-                MST.setEdge(e.a, e.b, e.w);
-                visited[e.b] = true;
-                sum += e.w;
-                visited_count++;
+        return sum;
+    }
 
-                for(int i=0; i<nNodes; i++){
-                    if(Mat[e.b][i] && !visited[i])
-                        pq.push({Mat[e.b][i], e.b, i});
+    void printMat(){
+        for(int i=0; i<nNodes; i++){
+            for(int j=0; j<nNodes; j++){
+                if (Mat[i][j] == INT_MAX)
+                    cout << "-" << '\t';
+                else
+                    cout << Mat[i][j] << "\t";
+            }
+            cout << endl;
+        }
+    }
+
+// -- visited before loop
+// -- never pushed to pq
+// -- priority queue not set to greater
+
+    Graph prims(int start){
+        vector<bool> visited (nNodes, false);
+        Graph MST (nNodes, nNodes-1);
+
+        priority_queue<Edge, vector<Edge>, greater<Edge>> pq;
+        Edge next (start, start, 0);
+        pq.push(next);
+
+        while (!pq.empty()){
+            next = pq.top();
+            pq.pop();
+            if(visited[next.b]) continue;
+
+            visited[next.b] = true;
+            MST.addEdge(next.a, next.b, next.weight);
+            start = next.b;
+
+            for(int i=0; i<nNodes; i++){
+                if(Mat[start][i]!=INT_MAX && !visited[i]){
+                    Edge next (start, i, Mat[start][i]);
+                    pq.push(next);
                 }
             }
         }
 
-        cout << "Total cost:" << sum << endl;
         return MST;
     }
 };
@@ -138,10 +181,13 @@ int main(){
 
     Graph G(n, k);
     G.input();
-    G.BFS(0);
-    G.DFS(0);
+    G.dfs();
+    G.bfs();
 
-    Graph MST = G.prins(0);
-    MST.DFS(0);
+    Graph MST = G.prims(0);
+    MST.bfs();
+    MST.printMat();
+    cout << MST.totalCost() << endl;
+
     return 0;
 }
